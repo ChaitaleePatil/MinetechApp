@@ -78,7 +78,11 @@ class _SignupPageState extends State<SignupPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Sign Up')),
+      appBar: AppBar(
+        title: Text('Sign Up'),
+        titleTextStyle: TextStyle(
+            color: Colors.blue[400], fontSize: 25, fontWeight: FontWeight.w700),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -88,7 +92,22 @@ class _SignupPageState extends State<SignupPage> {
             children: [
               TextFormField(
                 controller: firstNameController,
-                decoration: InputDecoration(labelText: 'First Name'),
+                decoration: InputDecoration(
+                  labelText: 'First Name',
+                  labelStyle: TextStyle(
+                      color: Colors.blue[400],
+                      fontSize: 16,
+                      fontWeight: FontWeight.w300), // Changed to blue
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                        color: Colors.blue[400]!), // Bottom border color
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                        color: Colors
+                            .blue[600]!), // Bottom border color when focused
+                  ),
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'First Name cannot be empty';
@@ -98,7 +117,22 @@ class _SignupPageState extends State<SignupPage> {
               ),
               TextFormField(
                 controller: middleNameController,
-                decoration: InputDecoration(labelText: 'Middle Name'),
+                decoration: InputDecoration(
+                  labelText: 'Middle Name',
+                  labelStyle: TextStyle(
+                      color: Colors.blue[400],
+                      fontSize: 16,
+                      fontWeight: FontWeight.w300), // Changed to blue
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                        color: Colors.blue[400]!), // Bottom border color
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                        color: Colors
+                            .blue[600]!), // Bottom border color when focused
+                  ),
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Middle Name cannot be empty';
@@ -108,7 +142,22 @@ class _SignupPageState extends State<SignupPage> {
               ),
               TextFormField(
                 controller: lastNameController,
-                decoration: InputDecoration(labelText: 'Last Name'),
+                decoration: InputDecoration(
+                  labelText: 'Last Name',
+                  labelStyle: TextStyle(
+                      color: Colors.blue[400],
+                      fontSize: 16,
+                      fontWeight: FontWeight.w300), // Changed to blue
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                        color: Colors.blue[400]!), // Bottom border color
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                        color: Colors
+                            .blue[600]!), // Bottom border color when focused
+                  ),
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Last Name cannot be empty';
@@ -118,7 +167,22 @@ class _SignupPageState extends State<SignupPage> {
               ),
               TextFormField(
                 controller: emailController,
-                decoration: InputDecoration(labelText: 'Email'),
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  labelStyle: TextStyle(
+                      color: Colors.blue[400],
+                      fontSize: 16,
+                      fontWeight: FontWeight.w300), // Changed to blue
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                        color: Colors.blue[400]!), // Bottom border color
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                        color: Colors
+                            .blue[600]!), // Bottom border color when focused
+                  ),
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Email cannot be empty';
@@ -130,7 +194,23 @@ class _SignupPageState extends State<SignupPage> {
               ),
               TextFormField(
                 controller: passwordController,
-                decoration: InputDecoration(labelText: 'Password'),
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  labelStyle: TextStyle(
+                      color: Colors.blue[400],
+                      fontSize: 16,
+                      fontWeight: FontWeight.w300),
+                  // Changed to blue
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                        color: Colors.blue[400]!), // Bottom border color
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(
+                        color: Colors
+                            .blue[600]!), // Bottom border color when focused
+                  ),
+                ),
                 obscureText: true,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -152,7 +232,14 @@ class _SignupPageState extends State<SignupPage> {
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: signupUser,
-                child: Text('Sign Up'),
+                child: Text(
+                  'Sign up',
+                  style: TextStyle(
+                    color: Colors.blue[400],
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
               ),
             ],
           ),
