@@ -27,12 +27,11 @@ class _HomePageState extends State<HomePage> {
     final List<Widget> _pages = [
       HomeTab(teamId: widget.teamId), // Pass the teamId to HomeTab
       ReceivedLogsTab(),
-      MineMapTab(),
+      MineMapTab(teamId: widget.teamId),
       ProfileTab(), // Profile Tab with the Logout button
     ];
 
     return Scaffold(
-      appBar: AppBar(title: Text('Home')),
       body: _pages[_currentIndex], // Display the selected page
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
@@ -68,23 +67,86 @@ class _HomePageState extends State<HomePage> {
 }
 
 // HomeTab widget with a card that navigates to the Team Members Page
-class HomeTab extends StatelessWidget {
+class HomeTab extends StatefulWidget {
   final String teamId; // Receive the teamId
 
   HomeTab({required this.teamId});
 
   @override
+  _HomeTabState createState() => _HomeTabState();
+}
+
+class _HomeTabState extends State<HomeTab> {
+  List<Map<String, dynamic>> _alerts = []; // To store alert data
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchAlerts();
+  }
+
+  // Fetch alerts from the team document
+  Future<void> _fetchAlerts() async {
+    try {
+      DocumentSnapshot teamDoc = await FirebaseFirestore.instance
+          .collection('teams')
+          .doc(widget.teamId)
+          .get();
+
+      if (teamDoc.exists && teamDoc['Alerts'] != null) {
+        List<dynamic> reportIds = teamDoc['Alerts']; // List of report IDs
+
+        for (String reportId in reportIds) {
+          DocumentSnapshot hazardDoc = await FirebaseFirestore.instance
+              .collection('hazard_reports')
+              .doc(reportId)
+              .get();
+
+          if (hazardDoc.exists) {
+            // Handle missing fields gracefully
+            setState(() {
+              _alerts.add({
+                'id': hazardDoc.id,
+                'hazardType': hazardDoc['hazardType'] ??
+                    'Unknown Hazard Type', // Default to a meaningful hazard type
+                'alertLevel': hazardDoc['alertLevel'] ??
+                    'Low', // Default to "Low" as a reasonable alert level
+                'createdBy': hazardDoc['createdBy'] ??
+                    'Unknown Creator', // Default to "Unknown Creator"
+                'createdAt': hazardDoc['createdAt'] != null
+                    ? (hazardDoc['createdAt'] as Timestamp).toDate()
+                    : DateTime
+                        .now(), // Default to current date and time if null
+                'latitude': hazardDoc['latitude'] ??
+                    0.0, // Default to 0.0 (on the equator/prime meridian) if null
+                'longitude': hazardDoc['longitude'] ??
+                    0.0, // Default to 0.0 (on the equator/prime meridian) if null
+                'note': hazardDoc['note'] ??
+                    'No additional notes provided', // Default to "No additional notes provided" if null
+              });
+            });
+          }
+        }
+      }
+    } catch (e) {
+      print("Error fetching alerts: $e");
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Center(
+    return SingleChildScrollView(
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          SizedBox(
+            height: 150,
+          ),
           Text('Welcome to your Home Page!', style: TextStyle(fontSize: 20)),
           Text(
-            'The Team joining code is $teamId',
+            'The Team joining code is ${widget.teamId}',
             style: TextStyle(color: Colors.amber[800]),
           ),
-          SizedBox(height: 20),
+          SizedBox(height: 30),
           Card(
             elevation: 5,
             child: ListTile(
@@ -93,50 +155,42 @@ class HomeTab extends StatelessWidget {
               trailing: Icon(Icons.arrow_forward),
               onTap: () async {
                 try {
-                  // Fetch the current user's team details from Firestore
                   final userId = FirebaseAuth.instance.currentUser!.uid;
                   DocumentSnapshot userDoc = await FirebaseFirestore.instance
                       .collection('users')
                       .doc(userId)
                       .get();
 
-                  // Ensure the user is part of at least one team
                   if (userDoc.exists &&
                       userDoc['teams'] != null &&
                       userDoc['teams'].isNotEmpty) {
                     List<dynamic> teams = userDoc['teams'] ?? [];
 
-                    // Find the team object matching the passed teamId
                     var team = teams.firstWhere(
-                      (t) => t['teamId'] == teamId,
+                      (t) => t['teamId'] == widget.teamId,
                       orElse: () => null,
                     );
 
                     if (team != null) {
-                      // Navigate to the Team Members Page
-                      print(teamId);
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => TeamMembersScreen(
-                            teamId: teamId,
+                            teamId: widget.teamId,
                           ),
                         ),
                       );
                     } else {
-                      // Show a message if the teamId is not found
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Team not found.')),
                       );
                     }
                   } else {
-                    // Show a message if the user is not part of any team
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('You are not part of any team.')),
                     );
                   }
                 } catch (e) {
-                  // Handle errors if any
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Failed to fetch team data: $e')),
                   );
@@ -168,16 +222,121 @@ class HomeTab extends StatelessWidget {
               title: Text('SMP'),
               trailing: Icon(Icons.arrow_forward),
               onTap: () {
-                print(teamId);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => SafetyManagementScreen(
-                      teamId: teamId,
+                      teamId: widget.teamId,
                     ), // Navigate to CreateSMP screen
                   ),
                 );
               },
+            ),
+          ),
+          SizedBox(
+            height: 30,
+          ),
+          // The scrollable alerts card, always at the bottom
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Card(
+                color: Colors.red.shade50, // Light red color for the card
+                elevation: 5,
+                child: Container(
+                  height: 300,
+                  width: 375, // Fixed height for the alert card
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Alerts",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        _alerts.isEmpty
+                            ? Center(
+                                child: Text(
+                                  "No Alerts",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.grey[700],
+                                  ),
+                                ),
+                              )
+                            : Expanded(
+                                child: ListView.builder(
+                                  shrinkWrap: true,
+                                  itemCount: _alerts.length,
+                                  itemBuilder: (context, index) {
+                                    var alert = _alerts[index];
+                                    return Card(
+                                      color: Colors.red.shade100,
+                                      elevation: 3,
+                                      child: ListTile(
+                                        leading:
+                                            Icon(Icons.warning_amber_rounded),
+                                        title: Text(alert['hazardType']),
+                                        subtitle: Text(
+                                            'Alert Level: ${alert['alertLevel']}'),
+                                        trailing: Icon(Icons.arrow_forward),
+                                        onTap: () {
+                                          // Show more details in a dialog or navigate to a new screen
+                                          showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              return AlertDialog(
+                                                title: Text('Alert Details'),
+                                                content: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                        'Created by: ${alert['createdBy']}'),
+                                                    Text(
+                                                        'Created at: ${alert['createdAt']}'),
+                                                    Text(
+                                                        'Hazard Type: ${alert['hazardType']}'),
+                                                    Text(
+                                                        'Alert Level: ${alert['alertLevel']}'),
+                                                    Text(
+                                                        'Latitude: ${alert['latitude']}'),
+                                                    Text(
+                                                        'Longitude: ${alert['longitude']}'),
+                                                    Text(
+                                                        'Note: ${alert['note']}'),
+                                                  ],
+                                                ),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      Navigator.of(context)
+                                                          .pop();
+                                                    },
+                                                    child: Text('Close'),
+                                                  ),
+                                                ],
+                                              );
+                                            },
+                                          );
+                                        },
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -196,9 +355,14 @@ class ReceivedLogsTab extends StatelessWidget {
 }
 
 class MineMapTab extends StatelessWidget {
+  final String teamId; // Receive the teamId
+
+  MineMapTab({required this.teamId});
   @override
   Widget build(BuildContext context) {
-    return PinpointMap();
+    return PinpointMap(
+      teamId: teamId,
+    );
   }
 }
 
@@ -223,17 +387,10 @@ class ProfileTab extends StatelessWidget {
                   MaterialPageRoute(builder: (context) => LoginPage()),
                 );
               } catch (e) {
-                // Handle any errors during logout
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Error logging out: $e')),
-                );
+                print("Error signing out: $e");
               }
             },
             child: Text('Logout'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white, // Corrected color property
-              padding: EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-            ),
           ),
         ],
       ),
