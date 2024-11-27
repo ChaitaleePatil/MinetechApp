@@ -85,6 +85,8 @@ class _CreateTeamDialogState extends State<CreateTeamDialog> {
           userId
         ], // Add the user as the first member with the admin role
         'requests': [], // Initialize the 'requests' array as an empty array
+        'smp_requests': [],
+        'Alerts': [],
       });
 
       // Update the user's teams array with the current team info

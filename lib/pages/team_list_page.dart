@@ -122,7 +122,7 @@ class _TeamListPageState extends State<TeamListPage> {
                                   onTap: () {
                                     print('Clicked teamId: ${team['teamId']}');
                                     // Pass the teamId to HomePage
-                                    Navigator.pushReplacement(
+                                    Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                           builder: (context) =>
