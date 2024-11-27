@@ -7,7 +7,9 @@ import 'pending_smp.dart'; // Import the SMPDetailScreen (Pending status)
 import 'smp_progress.dart'; // Import the SMPProgressScreen (Approved status)
 
 class SafetyManagementScreen extends StatefulWidget {
-  const SafetyManagementScreen({super.key});
+  final String teamId;
+  // const SafetyManagementScreen({super.key});
+  const SafetyManagementScreen({required this.teamId});
 
   @override
   State<SafetyManagementScreen> createState() => _SafetyManagementScreenState();
@@ -64,9 +66,12 @@ class _SafetyManagementScreenState extends State<SafetyManagementScreen>
           }
         }
 
-        pendingSMPs.sort((a, b) => (b['risk_score'] ?? 0).compareTo(a['risk_score'] ?? 0));
-        approvedSMPs.sort((a, b) => (b['risk_score'] ?? 0).compareTo(a['risk_score'] ?? 0));
-        completedSMPs.sort((a, b) => (b['risk_score'] ?? 0).compareTo(a['risk_score'] ?? 0));
+        pendingSMPs.sort(
+            (a, b) => (b['risk_score'] ?? 0).compareTo(a['risk_score'] ?? 0));
+        approvedSMPs.sort(
+            (a, b) => (b['risk_score'] ?? 0).compareTo(a['risk_score'] ?? 0));
+        completedSMPs.sort(
+            (a, b) => (b['risk_score'] ?? 0).compareTo(a['risk_score'] ?? 0));
       });
     } catch (e) {
       print('Error fetching SMPs: $e');
@@ -82,7 +87,8 @@ class _SafetyManagementScreenState extends State<SafetyManagementScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white, // Set the entire screen background to white
+      backgroundColor:
+          Colors.white, // Set the entire screen background to white
       appBar: AppBar(
         title: const Text('Safety Management Plans'),
         backgroundColor: Colors.white, // Set AppBar background to white
@@ -97,20 +103,22 @@ class _SafetyManagementScreenState extends State<SafetyManagementScreen>
           labelColor: Colors.black, // Color for the label of selected tab
           unselectedLabelColor: Colors.black, // Color for unselected tabs
           indicatorColor: Colors.black,
-          
         ),
       ),
       body: TabBarView(
         controller: _tabController,
         children: [
           // Pending tab
-          _buildTabView(pendingSMPs, 'No pending safety plans.', Icons.hourglass_empty, Colors.orange),
+          _buildTabView(pendingSMPs, 'No pending safety plans.',
+              Icons.hourglass_empty, Colors.orange),
 
           // Approved tab
-          _buildTabView(approvedSMPs, 'No approved safety plans.', Icons.check_circle, Colors.green),
+          _buildTabView(approvedSMPs, 'No approved safety plans.',
+              Icons.check_circle, Colors.green),
 
           // Completed tab
-          _buildTabView(completedSMPs, 'No completed safety plans.', Icons.done_all, Colors.blue),
+          _buildTabView(completedSMPs, 'No completed safety plans.',
+              Icons.done_all, Colors.blue),
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -128,7 +136,8 @@ class _SafetyManagementScreenState extends State<SafetyManagementScreen>
   }
 
   // Function to build tab view with pull-to-refresh functionality
-  Widget _buildTabView(List<DocumentSnapshot> smps, String emptyMessage, IconData icon, Color color) {
+  Widget _buildTabView(List<DocumentSnapshot> smps, String emptyMessage,
+      IconData icon, Color color) {
     return RefreshIndicator(
       onRefresh: () async {
         await fetchSMPs(); // Re-fetch SMPs when the user pulls to refresh
@@ -157,7 +166,8 @@ class _SafetyManagementScreenState extends State<SafetyManagementScreen>
                 return Container(
                   margin: const EdgeInsets.symmetric(vertical: 5),
                   decoration: BoxDecoration(
-                    border: Border.all(color: Colors.black), // Add a border between SMPs
+                    border: Border.all(
+                        color: Colors.black), // Add a border between SMPs
                     borderRadius: BorderRadius.circular(5),
                   ),
                   child: ListTile(
