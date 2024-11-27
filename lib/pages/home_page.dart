@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:minetech_project/pages/create_smp.dart';
+import 'package:minetech_project/pages/map.dart';
+import 'package:minetech_project/pages/smp.dart';
 import 'team_members_page.dart'; // Import the Team Members Page
 import 'login_page.dart'; // Import the Login Page
 
@@ -141,6 +144,42 @@ class HomeTab extends StatelessWidget {
               },
             ),
           ),
+          Card(
+            elevation: 5,
+            child: ListTile(
+              leading: Icon(Icons.safety_check),
+              title: Text('Create SMP'),
+              trailing: Icon(Icons.arrow_forward),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        CreateSMP(), // Navigate to CreateSMP screen
+                  ),
+                );
+              },
+            ),
+          ),
+          Card(
+            elevation: 5,
+            child: ListTile(
+              leading: Icon(Icons.safety_check),
+              title: Text('SMP'),
+              trailing: Icon(Icons.arrow_forward),
+              onTap: () {
+                print(teamId);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => SafetyManagementScreen(
+                      teamId: teamId,
+                    ), // Navigate to CreateSMP screen
+                  ),
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
@@ -159,7 +198,7 @@ class ReceivedLogsTab extends StatelessWidget {
 class MineMapTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Center(child: Text('Mine Map Page', style: TextStyle(fontSize: 20)));
+    return PinpointMap();
   }
 }
 

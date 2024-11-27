@@ -53,7 +53,7 @@ class _CreateSMPState extends State<CreateSMP> {
     try {
       final QuerySnapshot userSnapshot = await FirebaseFirestore.instance
           .collection('users')
-          .get();  // Get all users
+          .get(); // Get all users
 
       if (mounted) {
         setState(() {
@@ -113,7 +113,8 @@ class _CreateSMPState extends State<CreateSMP> {
 
   // Handle SMP submission
   void handleSubmit() async {
-    print('Submitting SMP: $hazardCategory, $exactHazard, $steps, $riskScore, $mitigationDays, $manager');
+    print(
+        'Submitting SMP: $hazardCategory, $exactHazard, $steps, $riskScore, $mitigationDays, $manager');
     try {
       await FirebaseFirestore.instance.collection('smp_requests').add({
         'hazard_category': hazardCategory,
@@ -160,15 +161,21 @@ class _CreateSMPState extends State<CreateSMP> {
               value: hazardCategory.isEmpty ? null : hazardCategory,
               decoration: InputDecoration(
                 labelText: 'Hazard Category',
-                labelStyle: TextStyle(fontSize: fontSize,color: Colors.black,),
+                labelStyle: TextStyle(
+                  fontSize: fontSize,
+                  color: Colors.black,
+                ),
                 border: const OutlineInputBorder(),
                 enabledBorder: const OutlineInputBorder(
-      borderSide: BorderSide(color: Colors.black), // Black border when not focused
-    ),
-     focusedBorder: const OutlineInputBorder(
-      borderSide: BorderSide(color: Colors.black), // Black border when focused
-    ),
-              ),dropdownColor: Colors.white, 
+                  borderSide: BorderSide(
+                      color: Colors.black), // Black border when not focused
+                ),
+                focusedBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(
+                      color: Colors.black), // Black border when focused
+                ),
+              ),
+              dropdownColor: Colors.white,
               items: hazardCategories.map((category) {
                 return DropdownMenuItem(
                   value: category,
@@ -185,69 +192,81 @@ class _CreateSMPState extends State<CreateSMP> {
             TextField(
               decoration: InputDecoration(
                 labelText: 'Exact Hazard',
-                labelStyle: TextStyle(fontSize: fontSize,color: Colors.black,),
+                labelStyle: TextStyle(
+                  fontSize: fontSize,
+                  color: Colors.black,
+                ),
                 border: const OutlineInputBorder(),
                 enabledBorder: const OutlineInputBorder(
-      borderSide: BorderSide(color: Colors.black), // Black border when not focused
-    ),
-     focusedBorder: const OutlineInputBorder(
-      borderSide: BorderSide(color: Colors.black), // Black border when focused
-    ),
+                  borderSide: BorderSide(
+                      color: Colors.black), // Black border when not focused
+                ),
+                focusedBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(
+                      color: Colors.black), // Black border when focused
+                ),
               ),
               onChanged: (value) => setState(() => exactHazard = value),
             ),
             const SizedBox(height: 15),
-            const Text('Steps to mitigate hazard:', style: TextStyle(fontSize: 16)),
+            const Text('Steps to mitigate hazard:',
+                style: TextStyle(fontSize: 16)),
             for (int i = 0; i < steps.length; i++)
-  Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8.0), // Add vertical spacing
-    child: Row(
-      children: [
-        Expanded(
-          child: TextField(
-            decoration: InputDecoration(
-              labelText: 'Step ${i + 1}',
-              labelStyle: TextStyle(fontSize: fontSize,color: Colors.black,),
-              border: const OutlineInputBorder(),
-              enabledBorder: const OutlineInputBorder(
-      borderSide: BorderSide(color: Colors.black), // Black border when not focused
-    ),
-    focusedBorder: const OutlineInputBorder(
-      borderSide: BorderSide(color: Colors.black), // Black border when focused
-    ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    vertical: 8.0), // Add vertical spacing
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        decoration: InputDecoration(
+                          labelText: 'Step ${i + 1}',
+                          labelStyle: TextStyle(
+                            fontSize: fontSize,
+                            color: Colors.black,
+                          ),
+                          border: const OutlineInputBorder(),
+                          enabledBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Colors
+                                    .black), // Black border when not focused
+                          ),
+                          focusedBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color:
+                                    Colors.black), // Black border when focused
+                          ),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            steps[i] = value;
+                          });
+                        },
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete,
+                          color: Color.fromARGB(255, 234, 24, 9)),
+                      onPressed: () => setState(() => steps.removeAt(i)),
+                    ),
+                  ],
+                ),
+              ),
+            Center(
+              child: ElevatedButton(
+                onPressed: () => setState(() => steps.add('')),
+                style: ElevatedButton.styleFrom(
+                  shape: const RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.zero, // Makes the button rectangular
+                  ),
+                  backgroundColor: const Color.fromARGB(255, 16, 105,
+                      179), // Sets the button's background color to blue
+                  foregroundColor: Colors.white, // Sets the text color to white
+                ),
+                child: const Text('Add Step'),
+              ),
             ),
-            onChanged: (value) {
-              setState(() {
-                steps[i] = value;
-              });
-            },
-          ),
-        ),
-        IconButton(
-          icon: const Icon(Icons.delete, color: Color.fromARGB(255, 234, 24, 9)),
-          onPressed: () => setState(() => steps.removeAt(i)),
-        ),
-      ],
-    ),
-  ),
-
-        
-Center(
-  child: ElevatedButton(
-    onPressed: () => setState(() => steps.add('')),
-    style: ElevatedButton.styleFrom(
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.zero, // Makes the button rectangular
-      ),
-      backgroundColor: const Color.fromARGB(255, 16, 105, 179), // Sets the button's background color to blue
-      foregroundColor: Colors.white, // Sets the text color to white
-    ),
-    child: const Text('Add Step'),
-  ),
-),
-
-
-
             const SizedBox(height: 15),
             const Text(
               'Risk Matrix',
@@ -262,19 +281,26 @@ Center(
                       filled: true,
                       fillColor: Colors.white,
                       labelText: 'Consequence',
-                      labelStyle: TextStyle(fontSize: fontSize,color: Colors.black,),
+                      labelStyle: TextStyle(
+                        fontSize: fontSize,
+                        color: Colors.black,
+                      ),
                       border: const OutlineInputBorder(),
                       enabledBorder: const OutlineInputBorder(
-      borderSide: BorderSide(color: Colors.black), // Black border when not focused
-    ),
-    focusedBorder: const OutlineInputBorder(
-      borderSide: BorderSide(color: Colors.black), // Black border when focused
-    ),
+                        borderSide: BorderSide(
+                            color:
+                                Colors.black), // Black border when not focused
+                      ),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(
+                            color: Colors.black), // Black border when focused
+                      ),
                     ),
                     items: List.generate(10, (index) {
                       return DropdownMenuItem(
                         value: index + 1,
-                        child: Text((index + 1).toString(), style: TextStyle(fontSize: fontSize)),
+                        child: Text((index + 1).toString(),
+                            style: TextStyle(fontSize: fontSize)),
                       );
                     }),
                     onChanged: (value) {
@@ -292,19 +318,26 @@ Center(
                       filled: true,
                       fillColor: Colors.white,
                       labelText: 'Exposure',
-                      labelStyle: TextStyle(fontSize: fontSize,color: Colors.black,),
+                      labelStyle: TextStyle(
+                        fontSize: fontSize,
+                        color: Colors.black,
+                      ),
                       border: const OutlineInputBorder(),
                       enabledBorder: const OutlineInputBorder(
-      borderSide: BorderSide(color: Colors.black), // Black border when not focused
-    ),
-    focusedBorder: const OutlineInputBorder(
-      borderSide: BorderSide(color: Colors.black), // Black border when focused
-    ),
+                        borderSide: BorderSide(
+                            color:
+                                Colors.black), // Black border when not focused
+                      ),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(
+                            color: Colors.black), // Black border when focused
+                      ),
                     ),
                     items: List.generate(10, (index) {
                       return DropdownMenuItem(
                         value: index + 1,
-                        child: Text((index + 1).toString(), style: TextStyle(fontSize: fontSize)),
+                        child: Text((index + 1).toString(),
+                            style: TextStyle(fontSize: fontSize)),
                       );
                     }),
                     onChanged: (value) {
@@ -322,19 +355,26 @@ Center(
                       filled: true,
                       fillColor: Colors.white,
                       labelText: 'Probability',
-                      labelStyle: TextStyle(fontSize: fontSize,color: Colors.black,),
+                      labelStyle: TextStyle(
+                        fontSize: fontSize,
+                        color: Colors.black,
+                      ),
                       border: const OutlineInputBorder(),
                       enabledBorder: const OutlineInputBorder(
-      borderSide: BorderSide(color: Colors.black), // Black border when not focused
-    ),
-    focusedBorder: const OutlineInputBorder(
-      borderSide: BorderSide(color: Colors.black), // Black border when focused
-    ),
+                        borderSide: BorderSide(
+                            color:
+                                Colors.black), // Black border when not focused
+                      ),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(
+                            color: Colors.black), // Black border when focused
+                      ),
                     ),
                     items: List.generate(10, (index) {
                       return DropdownMenuItem(
                         value: index + 1,
-                        child: Text((index + 1).toString(), style: TextStyle(fontSize: fontSize)),
+                        child: Text((index + 1).toString(),
+                            style: TextStyle(fontSize: fontSize)),
                       );
                     }),
                     onChanged: (value) {
@@ -346,38 +386,44 @@ Center(
                 ),
               ],
             ),
-Center(
-  child: ElevatedButton(
-    onPressed: calculateRiskScore,
-    style: ElevatedButton.styleFrom(
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.zero, // Makes the button rectangular
-      ),
-      backgroundColor: const Color.fromARGB(255, 16, 105, 179), // Sets the button's background color to blue
-      foregroundColor: Colors.white, // Sets the text color to white
-    ),
-    child: const Text('Calculate Risk Score'),
-  ),
-),
-
-
-                        if (riskScore > 0)
+            Center(
+              child: ElevatedButton(
+                onPressed: calculateRiskScore,
+                style: ElevatedButton.styleFrom(
+                  shape: const RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.zero, // Makes the button rectangular
+                  ),
+                  backgroundColor: const Color.fromARGB(255, 16, 105,
+                      179), // Sets the button's background color to blue
+                  foregroundColor: Colors.white, // Sets the text color to white
+                ),
+                child: const Text('Calculate Risk Score'),
+              ),
+            ),
+            if (riskScore > 0)
               Text(
                 'Risk Score: $riskScore',
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
             const SizedBox(height: 15),
             TextField(
               decoration: InputDecoration(
                 labelText: 'Number of days required for mitigation',
-                labelStyle: TextStyle(fontSize: fontSize,color: Colors.black,),
+                labelStyle: TextStyle(
+                  fontSize: fontSize,
+                  color: Colors.black,
+                ),
                 border: const OutlineInputBorder(),
                 enabledBorder: const OutlineInputBorder(
-      borderSide: BorderSide(color: Colors.black), // Black border when not focused
-    ),
-    focusedBorder: const OutlineInputBorder(
-      borderSide: BorderSide(color: Colors.black), // Black border when focused
-    ),
+                  borderSide: BorderSide(
+                      color: Colors.black), // Black border when not focused
+                ),
+                focusedBorder: const OutlineInputBorder(
+                  borderSide: BorderSide(
+                      color: Colors.black), // Black border when focused
+                ),
               ),
               keyboardType: TextInputType.number,
               onChanged: (value) => setState(() => mitigationDays = value),
@@ -390,16 +436,22 @@ Center(
                     children: [
                       TextField(
                         decoration: InputDecoration(
-
                           labelText: 'Search Manager/Supervisor',
-                          labelStyle: TextStyle(fontSize: fontSize,color: Colors.black,),
+                          labelStyle: TextStyle(
+                            fontSize: fontSize,
+                            color: Colors.black,
+                          ),
                           border: const OutlineInputBorder(),
                           enabledBorder: const OutlineInputBorder(
-      borderSide: BorderSide(color: Colors.black), // Black border when not focused
-    ),
-    focusedBorder: const OutlineInputBorder(
-      borderSide: BorderSide(color: Colors.black), // Black border when focused
-    ),
+                            borderSide: BorderSide(
+                                color: Colors
+                                    .black), // Black border when not focused
+                          ),
+                          focusedBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(
+                                color:
+                                    Colors.black), // Black border when focused
+                          ),
                         ),
                         onChanged: filterManagers,
                       ),
@@ -412,11 +464,11 @@ Center(
                                 labelStyle: TextStyle(fontSize: fontSize),
                                 border: const OutlineInputBorder(),
                               ),
-                              items: filteredManagerNames
-                                  .map((name) {
+                              items: filteredManagerNames.map((name) {
                                 return DropdownMenuItem(
                                   value: name,
-                                  child: Text(name, style: TextStyle(fontSize: fontSize)),
+                                  child: Text(name,
+                                      style: TextStyle(fontSize: fontSize)),
                                 );
                               }).toList(),
                               onChanged: (value) {
@@ -430,25 +482,25 @@ Center(
                   ),
             const SizedBox(height: 20),
             Center(
-  child: ElevatedButton(
-    onPressed: handleSubmit,
-    style: ElevatedButton.styleFrom(
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.zero, // Rectangular button
-      ),
-      backgroundColor: Colors.black, // Black background
-      foregroundColor: Colors.white, // White text color
-      minimumSize: const Size(200, 50), // Increase the height of the button
-      fixedSize: const Size(300, 50), // Make the width bigger than the other buttons
-    ),
-    child: const Text('Request Approval'),
-  ),
-)
-
+              child: ElevatedButton(
+                onPressed: handleSubmit,
+                style: ElevatedButton.styleFrom(
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.zero, // Rectangular button
+                  ),
+                  backgroundColor: Colors.black, // Black background
+                  foregroundColor: Colors.white, // White text color
+                  minimumSize:
+                      const Size(200, 50), // Increase the height of the button
+                  fixedSize: const Size(
+                      300, 50), // Make the width bigger than the other buttons
+                ),
+                child: const Text('Request Approval'),
+              ),
+            )
           ],
         ),
       ),
     );
   }
 }
-
