@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:minetech_project/pages/login_page.dart';
+import 'pages/login_page.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'pages/const.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await Supabase.initialize(
+    url: supabase_URL,
+    anonKey: supabase_Anon,
+  );
   runApp(MyApp());
 }
 

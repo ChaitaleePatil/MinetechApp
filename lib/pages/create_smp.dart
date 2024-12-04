@@ -4,11 +4,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class CreateSMP extends StatefulWidget {
-  const CreateSMP({super.key});
+  final String teamId; // Add this to accept teamId as a parameter
+
+  const CreateSMP({super.key, required this.teamId});
 
   @override
   State<CreateSMP> createState() => _CreateSMPState();
 }
+
 
 class _CreateSMPState extends State<CreateSMP> {
   String hazardCategory = '';
@@ -113,31 +116,32 @@ class _CreateSMPState extends State<CreateSMP> {
 
   // Handle SMP submission
   void handleSubmit() async {
-    print(
-        'Submitting SMP: $hazardCategory, $exactHazard, $steps, $riskScore, $mitigationDays, $manager');
-    try {
-      await FirebaseFirestore.instance.collection('smp_requests').add({
-        'hazard_category': hazardCategory,
-        'exact_hazard': exactHazard,
-        'steps': steps,
-        'risk_score': riskScore,
-        'mitigation_days': mitigationDays,
-        'manager': manager,
-        'status': 'Pending',
-        'timestamp': FieldValue.serverTimestamp(),
-      });
+  print(
+      'Submitting SMP: $hazardCategory, $exactHazard, $steps, $riskScore, $mitigationDays, $manager, ${widget.teamId}');
+  try {
+    await FirebaseFirestore.instance.collection('smp_requests').add({
+      'hazard_category': hazardCategory,
+      'exact_hazard': exactHazard,
+      'steps': steps,
+      'risk_score': riskScore,
+      'mitigation_days': mitigationDays,
+      'manager': manager,
+      'team_id': widget.teamId, // Add teamId to the Firestore document
+      'status': 'Pending',
+      'timestamp': FieldValue.serverTimestamp(),
+    });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("SMP sent for approval")),
-      );
-      Navigator.pop(context); // Go back to the previous screen after submission
-    } catch (e) {
-      print('Error submitting SMP: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to submit SMP")),
-      );
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("SMP sent for approval")),
+    );
+    Navigator.pop(context); // Go back to the previous screen after submission
+  } catch (e) {
+    print('Error submitting SMP: $e');
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Failed to submit SMP")),
+    );
   }
+}
 
   @override
   Widget build(BuildContext context) {
