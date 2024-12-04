@@ -329,7 +329,7 @@ class _PinpointMapState extends State<PinpointMap> {
                 overlayImages: [
                   OverlayImage(
                     bounds: imageBounds,
-                    imageProvider: AssetImage('assets/test.png'),
+                    imageProvider: AssetImage('lib/assets/images/test.png'),
                   ),
                 ],
               ),

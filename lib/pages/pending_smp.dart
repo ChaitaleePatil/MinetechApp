@@ -1,93 +1,176 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class SMPDetailScreen extends StatelessWidget {
+class SMPDetailScreen extends StatefulWidget {
   final DocumentSnapshot smp;
 
   const SMPDetailScreen({super.key, required this.smp});
 
   @override
+  _SMPDetailScreenState createState() => _SMPDetailScreenState();
+}
+
+class _SMPDetailScreenState extends State<SMPDetailScreen> {
+  bool isAdmin = false; // Track if the user is an admin
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAdminRole(); // Check if the current user is an admin
+  }
+
+  // Function to check if the current user is an admin in the correct team
+  Future<void> _checkAdminRole() async {
+  try {
+    final currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser != null) {
+      // Fetch the user document from Firestore to check their teams and roles
+      final DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUser.uid) // Get the current user document
+          .get();
+
+      if (userSnapshot.exists) {
+        // Get the list of teams associated with the user
+        List<dynamic> teams = userSnapshot['teams'] ?? [];
+
+        // Fetch the SMP document to get the teamId
+        final teamId = widget.smp['team_id']; // Get teamId from SMP request document
+
+        // Check if the user is in the correct team with role 'admin'
+        setState(() {
+          isAdmin = teams.any((team) =>
+              team['teamId'] == teamId && team['role'] == 'admin'); // Match teamId and role
+        });
+      } else {
+        print('User document does not exist.');
+      }
+    }
+  } catch (e) {
+    print('Error checking admin role: $e');
+  }
+}
+
+  // Function to approve the SMP
+  Future<void> _approveSMP(BuildContext context) async {
+    try {
+      // Update the status in the `smp_requests` collection
+      await FirebaseFirestore.instance
+          .collection('smp_requests')
+          .doc(widget.smp.id)
+          .update({'status': 'approved'});
+
+      // Add the SMP to the `smp_approval` collection
+      await FirebaseFirestore.instance
+          .collection('smp_approval')
+          .doc(widget.smp.id)
+          .set(widget.smp.data() as Map<String, dynamic>);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('SMP approved and added to the approval list!')),
+      );
+
+      // Navigate back or refresh the parent screen
+      Navigator.pop(context, 'approved');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error approving SMP: $e')),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Extract necessary data from the DocumentSnapshot with type checks
-    final exactHazard = smp['exact_hazard'] ?? 'Not provided';
-    final hazardCategory = smp['hazard_category'] ?? 'Not provided';
-
-    // If mitigation_days and risk_score are integers or doubles, convert them to string
-    final mitigationDays = smp['mitigation_days']?.toString() ?? 'Not provided';
-    final riskScore = smp['risk_score']?.toString() ?? 'Not provided';
-
-    // Ensure that steps is a list of strings, using an empty list as fallback
-    final steps = List<String>.from(smp['steps'] ?? []);
+    // Debugging line
+    print('SMP Detail Screen Loaded. Status: ${widget.smp['status']}');
+    print('Is Admin: $isAdmin'); // Debugging line
 
     return Scaffold(
-      backgroundColor: Colors.white, // Ensure the entire Scaffold background is white
+      backgroundColor: Colors.white,
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(80.0), // Adjust the AppBar height
+        preferredSize: const Size.fromHeight(80.0),
         child: AppBar(
           title: const Text('SMP Details'),
-          backgroundColor: Colors.white, // White background for AppBar
-          elevation: 0, // No shadow
+          backgroundColor: Colors.white,
+          elevation: 0,
           titleTextStyle: const TextStyle(
-            color: Colors.black, // Black text color for AppBar title
+            color: Colors.black,
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
           bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(1.0), // Border thickness
+            preferredSize: const Size.fromHeight(1.0),
             child: Container(
-              color: Colors.black, // Black border at the bottom of AppBar
+              color: Colors.black,
               height: 1.0,
             ),
           ),
         ),
       ),
       body: Container(
-        color: Colors.white, // Ensure the body container background is white
+        color: Colors.white,
         padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView( // Ensures content scrolls if it's too long
+        child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildInfoText('Exact Hazard:', exactHazard),
-              _buildInfoText('Hazard Category:', hazardCategory),
-              _buildInfoText('Mitigation Days:', mitigationDays),
-              _buildInfoText('Risk Score:', riskScore),
+              _buildInfoText('Exact Hazard:', widget.smp['exact_hazard'] ?? 'Not provided'),
+              _buildInfoText('Hazard Category:', widget.smp['hazard_category'] ?? 'Not provided'),
+              _buildInfoText('Mitigation Days:', widget.smp['mitigation_days']?.toString() ?? 'Not provided'),
+              _buildInfoText('Risk Score:', widget.smp['risk_score']?.toString() ?? 'Not provided'),
               const SizedBox(height: 16),
               const Text(
                 'Steps:',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
               ),
               const SizedBox(height: 8),
-              // Display steps if any, otherwise show "No steps provided"
-              steps.isEmpty
-                  ? const Text('No steps provided.', style: TextStyle(fontSize: 16, color: Colors.black))
+              (widget.smp['steps'] ?? []).isEmpty
+                  ? const Text(
+                      'No steps provided.',
+                      style: TextStyle(fontSize: 16, color: Colors.black),
+                    )
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: List.generate(
-                        steps.length,
+                        (widget.smp['steps'] ?? []).length,
                         (index) => Padding(
                           padding: const EdgeInsets.only(bottom: 4.0),
                           child: Text(
-                            '${index + 1}. ${steps[index]}', // Numbering steps
+                            '${index + 1}. ${widget.smp['steps'][index]}',
                             style: const TextStyle(fontSize: 16, color: Colors.black),
                           ),
                         ),
                       ),
                     ),
               const Divider(color: Colors.grey, height: 32),
-              _buildInfoText('Manager:', smp['manager'] ?? 'Not provided'),
-              _buildInfoText('Timestamp:', 
-                  smp['timestamp'] != null
-                      ? smp['timestamp'].toDate().toString()
-                      : 'Not provided'),
+              _buildInfoText('Manager:', widget.smp['manager'] ?? 'Not provided'),
+              _buildInfoText(
+                'Timestamp:',
+                widget.smp['timestamp'] != null ? widget.smp['timestamp'].toDate().toString() : 'Not provided',
+              ),
             ],
           ),
         ),
       ),
+      bottomNavigationBar: widget.smp['status'] == 'Pending' && isAdmin
+          ? Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: () => _approveSMP(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  padding: const EdgeInsets.symmetric(vertical: 16.0),
+                  textStyle: const TextStyle(fontSize: 18),
+                ),
+                child: const Text('Approve'),
+              ),
+            )
+          : null,
     );
   }
 
-  // Helper function to build key-value pairs of information
   Widget _buildInfoText(String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
@@ -108,7 +191,7 @@ class SMPDetailScreen extends StatelessWidget {
                 fontSize: 16,
                 color: Colors.black,
               ),
-              overflow: TextOverflow.ellipsis, // Handles long text gracefully
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

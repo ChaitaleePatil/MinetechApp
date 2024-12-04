@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print, sort_child_properties_last
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'create_smp.dart';
@@ -8,7 +6,7 @@ import 'smp_progress.dart'; // Import the SMPProgressScreen (Approved status)
 
 class SafetyManagementScreen extends StatefulWidget {
   final String teamId;
-  // const SafetyManagementScreen({super.key});
+
   const SafetyManagementScreen({required this.teamId});
 
   @override
@@ -23,18 +21,62 @@ class _SafetyManagementScreenState extends State<SafetyManagementScreen>
   List<DocumentSnapshot> pendingSMPs = [];
   List<DocumentSnapshot> approvedSMPs = [];
   List<DocumentSnapshot> completedSMPs = [];
+  bool isAdmin = false; // Track if the user is an admin
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    checkAdminRole(); // Check the user's role
     fetchSMPs(); // Fetch SMPs when the screen is initialized
+  }
+
+  Future<void> checkAdminRole() async {
+    try {
+      // Query Firestore to check if the current user is an admin for the team
+      final QuerySnapshot userSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where('team_id', isEqualTo: widget.teamId)
+          .where('role', isEqualTo: 'admin')
+          .get();
+
+      // Debugging: Log user role results
+      print("Admin check results: ${userSnapshot.docs}");
+
+      setState(() {
+        isAdmin = userSnapshot.docs.isNotEmpty;
+      });
+
+      print("Is Admin? $isAdmin for teamId ${widget.teamId}");
+    } catch (e) {
+      print('Error checking admin role: $e');
+    }
   }
 
   Future<void> fetchSMPs() async {
     try {
-      final QuerySnapshot smpSnapshot =
-          await FirebaseFirestore.instance.collection('smp_requests').get();
+      // Query Firestore for SMPs belonging to the user's team that are "Pending"
+      final QuerySnapshot smpSnapshot = await FirebaseFirestore.instance
+          .collection('smp_requests')
+          .where('team_id', isEqualTo: widget.teamId)
+          .where('status', isEqualTo: 'Pending')
+          .get();
+
+      // Query Firestore for SMPs in smp_approval
+      final QuerySnapshot smpApprovalSnapshot = await FirebaseFirestore.instance
+          .collection('smp_approval')
+          .where('team_id', isEqualTo: widget.teamId)
+          .get();
+
+      // Query Firestore for SMPs in smp_completed
+      final QuerySnapshot smpCompletedSnapshot = await FirebaseFirestore.instance
+          .collection('smp_completed')
+          .where('team_id', isEqualTo: widget.teamId)
+          .get();
+
+      // Create a set of approved SMP IDs to filter out from the pending SMPs
+      final Set<String> approvedSmpIds =
+          smpApprovalSnapshot.docs.map((doc) => doc.id).toSet();
 
       setState(() {
         // Clear the lists before adding new data
@@ -42,36 +84,18 @@ class _SafetyManagementScreenState extends State<SafetyManagementScreen>
         approvedSMPs = [];
         completedSMPs = [];
 
-        // Sort SMPs into their respective categories based on status
+        // Filter out approved SMPs from the pending list
         for (var doc in smpSnapshot.docs) {
-          print('Document ID: ${doc.id}, Data: ${doc.data()}');
-
-          if (doc.exists && doc.data() != null) {
-            var status = doc['status'];
-            var riskScore = doc['risk_score'];
-
-            if (status != null && status is String && riskScore is num) {
-              if (status == 'Pending') {
-                pendingSMPs.add(doc);
-              } else if (status == 'Approved') {
-                approvedSMPs.add(doc);
-              } else if (status == 'Completed') {
-                completedSMPs.add(doc);
-              }
-            } else {
-              print('Invalid data for document ID: ${doc.id}');
-            }
-          } else {
-            print('Document ${doc.id} does not exist or has no data');
+          if (!approvedSmpIds.contains(doc.id)) {
+            pendingSMPs.add(doc);
           }
         }
 
-        pendingSMPs.sort(
-            (a, b) => (b['risk_score'] ?? 0).compareTo(a['risk_score'] ?? 0));
-        approvedSMPs.sort(
-            (a, b) => (b['risk_score'] ?? 0).compareTo(a['risk_score'] ?? 0));
-        completedSMPs.sort(
-            (a, b) => (b['risk_score'] ?? 0).compareTo(a['risk_score'] ?? 0));
+        // Fetch approved SMPs
+        approvedSMPs = smpApprovalSnapshot.docs;
+
+        // Fetch completed SMPs
+        completedSMPs = smpCompletedSnapshot.docs;
       });
     } catch (e) {
       print('Error fetching SMPs: $e');
@@ -87,8 +111,7 @@ class _SafetyManagementScreenState extends State<SafetyManagementScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor:
-          Colors.white, // Set the entire screen background to white
+      backgroundColor: Colors.white, // Set the entire screen background to white
       appBar: AppBar(
         title: const Text('Safety Management Plans'),
         backgroundColor: Colors.white, // Set AppBar background to white
@@ -109,23 +132,39 @@ class _SafetyManagementScreenState extends State<SafetyManagementScreen>
         controller: _tabController,
         children: [
           // Pending tab
-          _buildTabView(pendingSMPs, 'No pending safety plans.',
-              Icons.hourglass_empty, Colors.orange),
+          _buildTabView(
+            pendingSMPs,
+            'No pending safety plans.',
+            Icons.hourglass_empty,
+            Colors.orange,
+          ),
 
           // Approved tab
-          _buildTabView(approvedSMPs, 'No approved safety plans.',
-              Icons.check_circle, Colors.green),
+          _buildTabView(
+            approvedSMPs,
+            'No approved safety plans.',
+            Icons.check_circle,
+            Colors.green,
+            isApproved: true,
+          ),
 
           // Completed tab
-          _buildTabView(completedSMPs, 'No completed safety plans.',
-              Icons.done_all, Colors.blue),
+          _buildTabView(
+            completedSMPs,
+            'No completed safety plans.',
+            Icons.done_all,
+            Colors.blue,
+            isCompleted: true,
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const CreateSMP()),
+            MaterialPageRoute(
+              builder: (context) => CreateSMP(teamId: widget.teamId),
+            ),
           );
         },
         tooltip: 'Create New SMP',
@@ -136,8 +175,14 @@ class _SafetyManagementScreenState extends State<SafetyManagementScreen>
   }
 
   // Function to build tab view with pull-to-refresh functionality
-  Widget _buildTabView(List<DocumentSnapshot> smps, String emptyMessage,
-      IconData icon, Color color) {
+  Widget _buildTabView(
+    List<DocumentSnapshot> smps,
+    String emptyMessage,
+    IconData icon,
+    Color color, {
+    bool isApproved = false,
+    bool isCompleted = false, // New flag for completed tab
+  }) {
     return RefreshIndicator(
       onRefresh: () async {
         await fetchSMPs(); // Re-fetch SMPs when the user pulls to refresh
@@ -166,15 +211,52 @@ class _SafetyManagementScreenState extends State<SafetyManagementScreen>
                 return Container(
                   margin: const EdgeInsets.symmetric(vertical: 5),
                   decoration: BoxDecoration(
-                    border: Border.all(
-                        color: Colors.black), // Add a border between SMPs
+                    border: Border.all(color: Colors.black), // Add border
                     borderRadius: BorderRadius.circular(5),
                   ),
                   child: ListTile(
                     title: Text(smp['hazard_category'] ?? 'No category'),
-                    subtitle: Text('Status: ${smp['status']}'),
+                    subtitle: Text(smp['exact_hazard']),
+                    trailing: isCompleted
+                        ? null
+                        : (isApproved
+                            ? null
+                            : (isAdmin
+                                ? ElevatedButton(
+                                    onPressed: () async {
+                                      try {
+                                        // Move to smp_approval collection
+                                        await FirebaseFirestore.instance
+                                            .collection('smp_approval')
+                                            .doc(smp.id)
+                                            .set(smp.data()
+                                                as Map<String, dynamic>);
+
+                                        // Remove from smp_requests
+                                        await FirebaseFirestore.instance
+                                            .collection('smp_requests')
+                                            .doc(smp.id)
+                                            .delete();
+
+                                        setState(() {
+                                          pendingSMPs.removeAt(index);
+                                        });
+                                      } catch (e) {
+                                        print('Error moving SMP to approval: $e');
+                                      }
+                                    },
+                                    child: const Text('Approve'),
+                                  )
+                                : null)),
                     onTap: () {
-                      if (smp['status'] == 'Approved') {
+                      if (isCompleted) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SMPDetailScreen(smp: smp),
+                          ),
+                        );
+                      } else if (isApproved) {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
